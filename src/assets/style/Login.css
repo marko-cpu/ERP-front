@@ -1,0 +1,209 @@
+body {
+
+  padding: 0;
+  margin: 0;
+  
+}
+.wrapper-log{
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%; 
+  height: 100vh;
+  /* background-image: url('../../assets/img/background.png'); 
+  background-size: cover; 
+  background-position: center;  */
+  background-image: radial-gradient(at 50% 50%, hsla(210, 100%, 20%, 0.5), hsl(228, 86%, 11%));
+
+  z-index: -1; 
+}
+
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+
+  overflow: hidden;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+  background-image: radial-gradient(at 50% 50%, hsla(210, 100%, 37%, 0.5), hsl(225, 33%, 21%));
+  box-shadow: hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+}
+
+.login-form .form-label {
+  font-size: 1rem;
+  font-weight: 600;
+  
+}
+
+label.form-label {
+  color: lightgray;
+}
+
+.login-button {
+  width: 100%;
+  background-image: radial-gradient(at 50% 50%, hsla(210, 100%, 38%, 0.5), hsl(226, 49%, 24%));
+  box-shadow: hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px;
+  border: none;
+  padding: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #4434cc;
+  
+}
+.toggle-button {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  color: rgb(250, 250, 252) !important; /* Možeš promeniti boju prema dizajnu */
+  transition: color 0.3s ease, text-decoration 0.3s ease; 
+  position: relative;
+  text-decoration: none !important;
+}
+
+.toggle-button::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  background-color: currentColor; /* Koristi trenutnu boju teksta */
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.toggle-button:hover {
+  color: #110770; /* Možeš promeniti boju prema dizajnu */
+}
+
+.toggle-button:hover::after {
+  width: 70%; 
+  text-decoration: none; /* Ova linija više nije potrebna */
+}
+
+
+
+.logo-login {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 15px;
+  margin-top: -15px;
+  display: block;
+  animation: bounceIn 0.5s ease-in-out;
+}
+
+@keyframes bounceIn {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-30px);
+  }
+  60% {
+    transform: translateY(-15px);
+  }
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.input-group-text {
+  background-image: radial-gradient(at 50% 50%, hsla(210, 100%, 38%, 0.5), hsl(226, 54%, 40%));
+  border-right: none; 
+}
+
+.form {
+  border-left: none;
+}
+
+.form-control:focus {
+  border-color: #001429; 
+  box-shadow: 2px 2px 2px rgba(1, 53, 109, 0.5);
+   
+}
+
+.error-message {
+  color: #dc3545; 
+  background-color: #f8d7da; 
+  border: 1px solid #f5c6cb; 
+  border-radius: 5px; 
+  padding: 10px; 
+  margin-bottom: 15px; 
+  font-weight: bold; 
+  transition: opacity 0.4s ease-in-out; 
+  opacity: 1; 
+}
+
+.error-message.fade-out {
+  opacity: 0;
+}
+.google-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 0;
+  margin-top: 20px;
+  border: none;
+  background-color: #5674a3;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.google-login-button:hover {
+  background-color: #357ae8;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.google-login-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(53, 122, 232, 0.3);
+}
+
+.google-icon {
+  margin-right: 10px;
+  font-size: 20px;
+}
