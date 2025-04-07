@@ -30,6 +30,8 @@ export const ReservationsList = () => {
         setReservations(response.data.content);
         setTotalPages(response.data.totalPages);
         setLoading(false);
+        console.log(response.data);
+        
       })
       .catch(error => {
         toast.error("Error fetching reservations");
@@ -118,8 +120,8 @@ export const ReservationsList = () => {
                           #{reservation.id}
                         </div>
                       </td>
-                      <td>{reservation.product?.name || "N/A"}</td>
-                      <td>#{reservation.order?.id || "N/A"}</td>
+                      <td>{reservation?.productName || "N/A"}</td>
+                      <td>#{reservation?.orderId || "N/A"}</td>
                       <td>{reservation.quantity}</td>
                       <td>{formatDate(reservation.reservationDate)}</td>
                       <td>
