@@ -41,6 +41,12 @@ const checkCustomerExists = (email) => {
   });
 };
 
+const deleteOrder = (orderId) => {
+  return axios.delete(`${API_URL}${orderId}`, {
+    headers: authHeader(),
+  });
+}
+
 const OrderService = {
   getAllOrders,
   getOrderCount,
@@ -49,6 +55,7 @@ const OrderService = {
   searchCustomers,
   getCustomers,
   checkCustomerExists,
+  deleteOrder,
 };
 
 export default OrderService;

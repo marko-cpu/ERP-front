@@ -29,6 +29,15 @@ const deleteArticleWarehouse = (id) => {
   return axios.delete(`${API_URL}/${id}`, { headers: authHeader() });
 };
 
+const updateArticleWarehouse = (articleId, quantity, purchasePrice) => {
+  return axios.put(
+    `${API_URL}/update/${articleId}`,
+    { quantity, purchasePrice },
+    { headers: authHeader() }
+  );
+};
+
+
 const updatePurchasePrice = (productId, newPrice) => {
   return axios.put(
     API_URL + productId,
@@ -43,6 +52,7 @@ const ArticleWarehouseService = {
   getArticlesByWarehouse,
   getWarehousesByProduct,
   deleteArticleWarehouse,
+  updateArticleWarehouse
 };
 
 export default ArticleWarehouseService;

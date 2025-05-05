@@ -1,7 +1,8 @@
-// src/components/account/product/AddProduct.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductService from "../../../services/product.service";
+import WarehouseService from "../../../services/warehouse.service";
+import AuthService from "../../../services/auth.service";
 import UserLayout from "../../UserLayout";
 import { Form, Button, Alert } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -20,31 +21,51 @@ const AddProduct = () => {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState({
+    warehouseName: "",
+    location: "",
+  });
+  const [quantity, setQuantity] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+
+ /*  useEffect(() => {
+    WarehouseService.getAllWarehouses(0, 1000)
+      .then((response) => setWarehouses(response.data.content))
+      .catch((error) => console.error("Error fetching warehouses:", error));
+  }, []); */
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!Object.values(formData).every((field) => field !== "")) {
+    if (!Object.values(formData).every(field => field !== "") /* || !selectedWarehouse.warehouseName || !quantity || !purchasePrice */) {
       setError("Please fill in all required fields");
       return;
     }
-
-    const productData = {
-      ...formData,
-      price: parseFloat(formData.price),
-    };
-
+  
+    const productData = { ...formData, price: parseFloat(formData.price) };
+  
     ProductService.addProduct(productData)
+      .then((response) => {
+        /* const warehousePayload = {
+          warehouseName: selectedWarehouse.warehouseName,
+          location: selectedWarehouse.location,
+          articles: [{
+            product: { id: response.data.id },
+            purchasePrice: parseFloat(purchasePrice),
+            quantity: parseInt(quantity)
+          }]
+        };
+        return ProductService.addProductToWarehouse(warehousePayload); */
+      })
       .then(() => {
         toast.success("Product created successfully!");
         setTimeout(() => navigate("/account/productsList"), 1500);
       })
       .catch((error) => {
-        toast.error(
-          `"Error creating product. Please try again.: ${error.message}`
-        );
+        toast.error(`Error creating product: ${error.message}`);
       });
   };
 
@@ -59,8 +80,8 @@ const AddProduct = () => {
     <UserLayout>
       <div className="mt-0 ">
         <div className="form-wrapper mx-auto">
-          <h2 className="form-title">
-            <FontAwesomeIcon icon={faBox} className="me-2 text-primary mb-3" />
+          <h2 className="form-title mt-3">
+            <FontAwesomeIcon icon={faBox} className="me-2 text-primary mb-3 " />
             Add New Product
           </h2>
 
@@ -158,6 +179,55 @@ const AddProduct = () => {
                   className="form-control-custom rounded-1 py-2 px-3"
                 />
               </Form.Group>
+
+              {/* <Form.Group className="mb-2">
+                <Form.Label className="text-secondary fw-medium mb-2">
+                  Warehouse *
+                </Form.Label>
+                <Form.Select
+                  value={`${selectedWarehouse.warehouseName}|${selectedWarehouse.location}`}
+                  onChange={(e) => {
+                    const [warehouseName, location] = e.target.value.split("|");
+                    setSelectedWarehouse({ warehouseName, location });
+                  }}
+                  required
+                >
+                  <option value="">Select Warehouse</option>
+                  {warehouses.map((warehouse) => (
+                    <option
+                      key={warehouse.id}
+                      value={`${warehouse.warehouseName}|${warehouse.location}`}
+                    >
+                      {warehouse.warehouseName} - {warehouse.location}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Form.Label className="text-secondary fw-medium mb-2">
+                  Quantity *
+                </Form.Label>
+                <Form.Control
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Form.Label className="text-secondary fw-medium mb-2">
+                  Purchase Price *
+                </Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  required
+                />
+              </Form.Group> */}
 
               <div className="d-flex justify-content-end gap-3">
                 <Button

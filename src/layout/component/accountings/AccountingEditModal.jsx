@@ -7,7 +7,6 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
   const [formData, setFormData] = useState({
     date: "",
     totalPrice: 0,
-    state: 1,
     order: {
       id: "",
       customer: {
@@ -18,18 +17,18 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
         address: "",
         city: "",
         postalCode: "",
-        createdTime: ""
+        createdTime: "",
       },
       products: [],
-      state: 0,
-      createdTime: ""
+      state: undefined,
+      createdTime: "",
     },
-   
+
     user: {
       firstName: "",
       lastName: "",
-      email: ""
-    }
+      email: "",
+    },
   });
 
   useEffect(() => {
@@ -37,14 +36,14 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
       const order = accounting.order || {};
       const customer = order.customer || {};
       const user = order.user || {};
-
+  
       setFormData({
         date: accounting.date?.split("T")[0] || "",
         totalPrice: accounting.totalPrice || 0,
-        state: accounting.state || 1,
+        state: accounting.state || 0, 
         order: {
           id: order.id || "",
-          state: order.state || 0,
+          state: order.state || 0, 
           createdTime: order.createdTime || "",
           customer: {
             firstName: customer.firstName || "",
@@ -54,25 +53,24 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
             address: customer.address || "",
             city: customer.city || "",
             postalCode: customer.postalCode || "",
-            createdTime: customer.createdTime || ""
+            createdTime: customer.createdTime || "",
           },
-          products: order.productList || []
+          products: order.productList || [],
         },
-       
         user: {
           firstName: user.firstName || "",
           lastName: user.lastName || "",
-          email: user.email || ""
-        }
+          email: user.email || "",
+        },
       });
     }
   }, [accounting]);
-
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -85,32 +83,35 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
     const updatedData = {
       ...formData,
       totalPrice: parseFloat(formData.totalPrice),
-      state: parseInt(formData.state)
+      state: parseInt(formData.state),
     };
 
     onSave(accounting.id, updatedData);
     handleClose();
   };
 
-
-
-
   const getOrderStateLabel = (state) => {
-    switch(state) {
-      case 1: return "Completed";
-      case 2: return "Cancelled";
-      default: return "In Progress";
+    switch (state) {
+      case 1:
+        return "Completed";
+      case 2:
+        return "Cancelled";
+      default:
+        return "Pending";
     }
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="xl" className="modal-professional">
+    <Modal
+      show={show}
+      onHide={handleClose}
+      size="xl"
+      className="modal-professional"
+    >
       <Modal.Header closeButton>
-        <Modal.Title>
-          Edit Accounting Entry #{accounting?.id}
-        </Modal.Title>
+        <Modal.Title>Edit Accounting Entry #{accounting?.id}</Modal.Title>
       </Modal.Header>
-      
+
       <Modal.Body>
         <Form>
           {/* Accounting Section */}
@@ -127,27 +128,33 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={3}>
               <Form.Group>
-                <Form.Label className="text-secondary">Total Amount (€) *</Form.Label>
+                <Form.Label className="text-secondary">
+                  Total Amount (€) *
+                </Form.Label>
                 <Form.Control
                   type="number"
                   step="0.01"
                   name="totalPrice"
                   value={formData.totalPrice}
                   onChange={handleInputChange}
+                  readOnly
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={3}>
               <Form.Group>
-                <Form.Label className="text-secondary">Payment Status</Form.Label>
+                <Form.Label className="text-secondary">
+                  Payment Status
+                </Form.Label>
                 <Form.Select
                   name="state"
                   value={formData.state}
                   onChange={handleInputChange}
+                  disabled
                 >
                   <option value={1}>Paid</option>
                   <option value={0}>Pending</option>
@@ -155,21 +162,9 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label className="text-secondary">System Total</Form.Label>
-                <Form.Control
-                  value={`€${(accounting?.totalPrice || 0).toFixed(2)}`}
-                  readOnly
-                />
-              </Form.Group>
-            </Col>
-          </Row>
 
-          
-          
-         
+           
+          </Row>
 
           {/* Customer Section */}
           <div className="section-header mb-3">Customer Details</div>
@@ -183,7 +178,7 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="text-secondary">Contact Info</Form.Label>
@@ -194,7 +189,7 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
               </Form.Group>
             </Col>
 
-            <Col md={4} className="mt-2">
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="text-secondary">Address</Form.Label>
                 <Form.Control
@@ -212,14 +207,12 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
               <Form.Group>
                 <Form.Label className="text-secondary">Order Status</Form.Label>
                 <Form.Control
-                  value={getOrderStateLabel(formData.order.state)}
+                  value={getOrderStateLabel(formData.state)}
                   readOnly
                 />
               </Form.Group>
             </Col>
-            
-           
-            
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="text-secondary">Processed By</Form.Label>
@@ -262,12 +255,15 @@ const AccountingEditModal = ({ show, handleClose, accounting, onSave }) => {
               <tr className="fw-bold">
                 <td colSpan="6"></td>
                 <td className="text-end">Total:</td>
-                <td>€{formData.order.products.reduce((sum, p) => sum + (p.totalPrice || 0), 0).toFixed(2)}</td>
+                <td>
+                  €
+                  {formData.order.products
+                    .reduce((sum, p) => sum + (p.totalPrice || 0), 0)
+                    .toFixed(2)}
+                </td>
               </tr>
             </tbody>
           </Table>
-
-         
         </Form>
       </Modal.Body>
 

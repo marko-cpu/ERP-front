@@ -1,8 +1,8 @@
 import axios from "axios";
-
 const API_URL = "http://localhost:8080/api/auth/";
 
 class AuthService {
+  
   async login(email, password) {
     const response = await axios.post(API_URL + "signin", {
       email,
@@ -40,6 +40,7 @@ class AuthService {
     const userRoles = this.getCurrentUserRoles();
     return requiredRoles.some((role) => userRoles.includes(role));
   }
+
 }
 
 export default new AuthService();

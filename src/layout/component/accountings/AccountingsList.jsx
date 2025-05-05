@@ -47,7 +47,7 @@ const AccountingList = () => {
       setSelectedAccounting(response.data);
       setShowEditModal(true);
     } catch (error) {
-      toast.error('Greška pri učitavanju podataka');
+      toast.error('Error fetching accounting details');
     }
   };
 
@@ -122,7 +122,7 @@ const AccountingList = () => {
               </span>
               <input
                 type="text"
-                placeholder="Search entries..."
+                placeholder="Search accountings..."
                 className="form-control"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -155,11 +155,11 @@ const AccountingList = () => {
             <div className="table-responsive rounded-3 shadow-sm">
               <table className="table table-hover align-middle mb-0">
                 <thead className="bg-primary text-white">
-                  <tr>
+                  <tr className="text-center">
                     <th className="ps-4 py-3">ID</th>
                     <th className="py-3">Customer</th>
                     <th className="py-3">Order ID</th>
-                    <th className="py-3">Date</th>
+                    <th className="py-3">Expiration Date</th>
                     <th className="py-3">Total</th>
                     <th className="py-3">Status</th>
                     <th className="pe-4 py-3 text-end">Actions</th>
@@ -171,7 +171,7 @@ const AccountingList = () => {
                     const user = order.user || {};
 
                     return (
-                      <tr key={accounting.id} className="transition-all">
+                      <tr key={accounting.id} className="transition-all text-center">
                         <td className="ps-4">
                           <div className="fw-semibold text-dark">
                             #{accounting.id}

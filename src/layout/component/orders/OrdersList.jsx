@@ -13,6 +13,8 @@ import {
   faTrash,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import authService from "../../../services/auth.service.jsx";
+import { toast } from "react-toastify";
 
 const OrdersList = () => {
   const navigate = useNavigate();
@@ -26,6 +28,23 @@ const OrdersList = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+
+  const canDeleteOrders = authService.hasAnyRole(["ADMIN", "SALES_MANAGER"]);
+
+  const handleDeleteOrder = async () => {
+    try {
+      await OrderService.deleteOrder(orderToDelete);
+      toast.success("Order deleted successfully");
+      fetchOrders();
+    } catch (error) {
+      toast.error("Error deleting order: " + error.message);
+    } finally {
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -37,6 +56,8 @@ const OrdersList = () => {
         setOrders(response.data?.content || []);
         setTotalPages(response.data?.totalPages || 0);
         setLoading(false);
+        console.log("Fetched orders:", response.data?.content);
+        
       },
       (error) => {
         console.error("Error fetching orders", error);
@@ -44,7 +65,7 @@ const OrdersList = () => {
       }
     );
   };
-  
+
   const refreshOrders = async () => {
     try {
       setLoading(true);
@@ -59,9 +80,8 @@ const OrdersList = () => {
       console.error("Refresh error:", error);
     } finally {
       setLoading(false);
-    }
+    } 
   };
-
 
   const filteredOrders = orders.filter((order) => {
     const user = order.user || {};
@@ -99,6 +119,26 @@ const OrdersList = () => {
   return (
     <>
       <UserLayout>
+        {showDeleteConfirm && (
+          <div className="modal-overlay">
+            <div className="delete-confirm-modal">
+              <h5>Confirm Delete</h5>
+              <p>Are you sure you want to delete this order?</p>
+              <div className="modal-buttons">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={handleDeleteOrder}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="content p-4">
           <div className="d-flex align-items-center justify-content-between mb-4">
             <h2 className="fs-2 fw-semibold form-title">
@@ -139,75 +179,78 @@ const OrdersList = () => {
             </div>
           ) : (
             <>
-              <div className="table-responsive rounded-3 shadow-sm">
+              <div className="table-responsive rounded-3 shadow-sm border border-light-subtle">
                 <table className="table table-hover align-middle mb-0">
                   <thead className="bg-primary text-white">
-                    <tr>
-                      <th className="ps-4 py-3">Order ID</th>
-                      <th className="py-3">User</th>
-                      <th className="py-3">Total</th>
-                      <th className="py-3">Items</th>
-                      <th className="py-3">PDV</th>
-                      <th className="pe-4 py-3 text-end">Actions</th>
+                    <tr className="text-center">
+                      <th className="ps-4 py-3 text-uppercase small">
+                        Order ID
+                      </th> 
+                      <th className="py-3 text-uppercase small">Customer</th>
+                      <th className="py-3 text-uppercase small">Total</th>
+                      <th className="py-3 text-uppercase small">Items</th>
+                      <th className="py-3 text-uppercase small">PDV</th>
+                      <th className="pe-4 py-3 text-uppercase small text-end">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredOrders.map((order) => {
-                      const user = order.user || {};
+                      const customer = order.customer || {};
                       return (
-                        <tr key={order.id} className="transition-all">
+                        <tr
+                          key={order.id}
+                          className="border-bottom text-center "
+                        >
                           <td className="ps-4 fw-semibold text-dark">
                             #{order.id}
                           </td>
                           <td>
                             <div className="d-flex flex-column">
-                              <span className="fw-medium">{`${user.firstName} ${user.lastName}`}</span>
+                              <span className="fw-medium text-dark">{`${customer.firstName} ${customer.lastName}`}</span>
                               <small className="text-muted">
-                                {user.email || "-"}
+                                {customer.email || "-"}
                               </small>
                             </div>
                           </td>
                           <td>
-                            <span className="badge bg-success bg-opacity-10 text-secondary">
+                            <span className="fw-semibold px-3 py-2 ">
                               {calculateOrderTotal(order.productList).toFixed(
                                 2
-                              )}
+                              )}{" "}
                               €
                             </span>
                           </td>
                           <td>
-                            <span className="text-primary ">
+                            <span className="text-primary fw-bold">
                               {order.productList.length}
                             </span>
                           </td>
-                          <td className="text-secondary">
-                            {calculateTotalPDV(order.productList).toFixed(2)}€
+                          <td className="text-secondary fw-semibold">
+                            {calculateTotalPDV(order.productList).toFixed(2)} €
                           </td>
-
                           <td className="pe-4 text-end">
                             <div className="d-flex gap-2 justify-content-end">
                               <button
-                                className="btn btn-sm btn-light-blue"
+                                className="btn btn-sm btn-light-blue d-flex align-items-center gap-1"
                                 onClick={() => handleViewClick(order.id)}
                               >
-                                <FontAwesomeIcon
-                                  icon={faEye}
-                                  className="me-2"
-                                />
-                                View
+                                <FontAwesomeIcon icon={faEye} />
+                                <span>View</span>
                               </button>
-                              {/*  <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => {
-                               
-                              }}
-                            >
-                              <FontAwesomeIcon
-                                icon={faTrash}
-                                className="me-2"
-                              />
-                              Delete
-                            </button> */}
+                              {canDeleteOrders && (
+                                <button
+                                  className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                                  onClick={() => {
+                                    setOrderToDelete(order.id);
+                                    setShowDeleteConfirm(true);
+                                  }}
+                                >
+                                  <FontAwesomeIcon icon={faTrash} />
+                                  <span>Delete</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -216,6 +259,7 @@ const OrdersList = () => {
                   </tbody>
                 </table>
               </div>
+
               <div className="d-flex justify-content-between align-items-center mt-3">
                 <div>
                   <button

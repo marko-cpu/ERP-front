@@ -34,10 +34,13 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (currentUser) {
-      navigate(from, { replace: true });
+    if (currentUser && location.pathname === "/login") {
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 0); // daj Reactu vremena da završi render
     }
-  }, [currentUser, from, navigate]);
+  }, [currentUser, from, navigate, location.pathname]);
+  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -56,8 +59,9 @@ const Login = () => {
       updateUser(currentUser);
 
       if (currentUser && currentUser.roles.length > 0) {      
-          navigate("/account")
+          navigate("/account");
       }
+      
     } catch (error) {
       setErrors({ api: error.response?.data?.message || "Login failed" });
 

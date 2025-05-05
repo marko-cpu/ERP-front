@@ -3,13 +3,14 @@
     width: 250px;
     transition: all 0.3s;
     background: linear-gradient(155deg, #1a1a1a, #4b4b4b);
+    min-height: 100vh;
   }
   
   .sidebar-header {
-    padding: 1rem 0;
+    padding: 1.25rem 0;
   }
   
-  .sidebar-item {
+  .sidebar-item { 
     border-radius: 8px;
     transition: all 0.2s ease;
     cursor: pointer;

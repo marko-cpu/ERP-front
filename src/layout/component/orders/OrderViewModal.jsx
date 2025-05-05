@@ -60,7 +60,7 @@ const OrderViewModal = ({ show, handleClose, orderId }) => {
                 <div className="col-md-6">
                   <div className="info-item mb-2">
                     <span className="label">Order ID:</span>
-                    <span className="value badge ">#{order.id}</span>
+                    <span className="value fw-bold">#{order.id}</span>
                   </div>
                  
                 {/*   <div className="info-item mb-2">
@@ -73,7 +73,7 @@ const OrderViewModal = ({ show, handleClose, orderId }) => {
                 <div className="col-md-6">
                   <div className="info-item mb-2">
                     <span className="label">Total Amount:</span>
-                    <span className="value text-success fw-bold">
+                    <span className="value fw-bold">
                       <FontAwesomeIcon icon={faEuroSign} className="me-1" />
                       {calculateOrderTotal(order.productList).toFixed(2)}
                     </span>

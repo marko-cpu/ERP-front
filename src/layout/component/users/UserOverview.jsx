@@ -88,119 +88,115 @@ const UserOverview = () => {
 
   return (
     <UserLayout>
-      <div className="content">
-        <div className="card shadow-sm text-center pb-3">
-          <div className="card-body p-1">
+      <div className="content px-3 py-4">
+        <div className="card border-0 shadow-lg rounded-3">
+          <div className="card-body p-4">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4 className="fw-bold text-gradient">User Profile</h4>
+              {showEditButton && (
+                <button 
+                  className="btn btn-light-blue rounded-pill px-4"
+                  onClick={() => setShowEditModal(true)}
+                >
+                  <i className="bi bi-pencil-square me-2"></i>
+                  Edit Profile
+                </button>
+              )}
+            </div>
+
             <div className="row g-4">
+              {/* Personal Information */}
               <div className="col-12">
-                <h5 className="fw-semibold mb-3 border-bottom pb-2">
-                  Personal Information
-                </h5>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">First Name</label>
-                    <div className="form-control bg-light border-0">
-                      {user.firstName}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">Last Name</label>
-                    <div className="form-control bg-light border-0">
-                      {user.lastName}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">Email</label>
-                    <div className="form-control bg-light border-0">
-                      {user.email}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">
-                      Phone Number
-                    </label>
-                    <div className="form-control bg-light border-0">
-                      {user.phoneNumber || "-"}
-                    </div>
+                <div className="bg-light p-4 rounded-4">
+                  <h5 className="fw-semibold mb-3 text-primary">Personal Information</h5>
+                  <div className="row g-3">
+                    {[
+                      { label: "First Name", value: user.firstName },
+                      { label: "Last Name", value: user.lastName },
+                      { label: "Email", value: user.email },
+                      { label: "Phone Number", value: user.phoneNumber || "-" }
+                    ].map((field, idx) => (
+                      <div key={idx} className="col-md-6">
+                        <div className="d-flex flex-column">
+                          <span className="text-muted small mb-1">{field.label}</span>
+                          <div className="p-2 bg-white rounded-2 border">
+                            {field.value}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
+              {/* Account Information */}
               <div className="col-12">
-                <h5 className="fw-semibold mb-3 border-bottom pb-2">
-                  Account Information
-                </h5>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">
-                      Account Created
-                    </label>
-                    <div className="form-control bg-light border-0">
-                      {new Date(user.createdTime).toLocaleDateString("en-GB", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                <div className="bg-light p-4 rounded-4">
+                  <h5 className="fw-semibold mb-3 text-primary">Account Details</h5>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="d-flex flex-column">
+                        <span className="text-muted small mb-1">Account Created</span>
+                        <div className="p-2 bg-white rounded-2 border">
+                          {new Date(user.createdTime).toLocaleDateString("en-GB", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric"
+                          })}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">Status</label>
-                    <div className="form-control bg-light border-0 d-flex align-items-center justify-content-center">
-                      <FontAwesomeIcon
-                        icon={user.enabled ? faCircleCheck : faCircle}
-                        className={`me-2 ${
-                          user.enabled ? "text-success" : "text-secondary"
-                        }`}
-                      />
-                      {user.enabled ? "Active" : "Inactive"}
+                    
+                    <div className="col-md-6">
+                      <div className="d-flex flex-column">
+                        <span className="text-muted small mb-1">Status</span>
+                        <div className="p-2 bg-white rounded-2 border d-flex align-items-center">
+                          <FontAwesomeIcon
+                            icon={user.enabled ? faCircleCheck : faCircle}
+                            className={`me-2 ${user.enabled ? "text-success" : "text-danger"}`}
+                          />
+                          <span className={user.enabled ? "text-success" : "text-danger"}>
+                            {user.enabled ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="col-md-6">
-                    <label className="form-label text-muted">User Role</label>
-                    <div className="form-control bg-light border-0">
-                     
-                        {user.roles?.length > 0 ? (
-                          user.roles.map((role, index) => (
-                            <span
+                    <div className="col-md-6">
+                      <div className="d-flex flex-column">
+                        <span className="text-muted small mb-1">Roles</span>
+                        <div className="d-flex gap-2 flex-wrap">
+                          {user.roles?.map((role, index) => (
+                            <span 
                               key={index}
-                              className="badge bg-info bg-opacity-10 text-info me-1"
-                              style={{ fontSize: "0.8rem", fontWeight: "bold" }}
+                              className="badge rounded-pill bg-opacity-10 text-primary border border-primary p-2" 
                             >
                               {role.name || role}
                             </span>
-                          ))
-                        ) : (
-                          <span className="badge bg-secondary">No Role</span>
-                        )}
-                     
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                {showEditButton && (
-                  <button
-                    className="btn btn-light-blue"
-                    onClick={() => setShowEditModal(true)}
-                  >
-                    Edit Profile
-                  </button>
-                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <UserEditModal
-        show={showEditModal}
-        handleClose={() => setShowEditModal(false)}
-        user={user}
-        roles={availableRoles}
-        onSave={handleUpdateUser}
-        allowRoleEdit={isAdmin}
-      />
+        {/* Edit Modal */}
+        <UserEditModal
+          show={showEditModal}
+          handleClose={() => setShowEditModal(false)}
+          user={user}
+          roles={availableRoles}
+          onSave={handleUpdateUser}
+          allowRoleEdit={isAdmin}
+        />
+      </div>
     </UserLayout>
   );
 };
+
 
 export default UserOverview;

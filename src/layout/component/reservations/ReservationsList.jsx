@@ -5,11 +5,8 @@ import UserLayout from "../../UserLayout";
 import "../../../assets/style/table-list-styles.css";
 import { toast } from "react-toastify";
 import ReservationService from "../../../services/reservation.service";
-import {
-  faSearch,
-  faBoxOpen,
-  faEdit
-} from "@fortawesome/free-solid-svg-icons";
+import ReservationEditModal from "./ReservationEditModal";
+import { faSearch, faBoxOpen, faEdit } from "@fortawesome/free-solid-svg-icons";
 
 export const ReservationsList = () => {
   const navigate = useNavigate();
@@ -19,6 +16,8 @@ export const ReservationsList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(5);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   useEffect(() => {
     fetchReservations();
@@ -26,21 +25,39 @@ export const ReservationsList = () => {
 
   const fetchReservations = () => {
     ReservationService.getAllReservations(currentPage, pageSize)
-      .then(response => {
+      .then((response) => {
         setReservations(response.data.content);
         setTotalPages(response.data.totalPages);
         setLoading(false);
         console.log(response.data);
-        
       })
-      .catch(error => {
+      .catch((error) => {
         toast.error("Error fetching reservations");
         setLoading(false);
       });
   };
 
-  const handleEditClick = (reservation) => {
-    // Implement edit logic
+  const handleEditClick = async (reservation) => {
+    try {
+      const response = await ReservationService.getReservationById(
+        reservation.id
+      );
+      setSelectedReservation(response.data);
+      setShowEditModal(true);
+    } catch (error) {
+      toast.error("Greška pri učitavanju podataka");
+    }
+  };
+
+  const handleUpdateReservation = (id, updatedData) => {
+    ReservationService.updateReservation(id, updatedData)
+      .then(() => {
+        toast.success("Updated successfully");
+        fetchReservations(); // This already uses currentPage/pageSize
+      })
+      .catch((error) => {
+        toast.error("Error updating reservation");
+      });
   };
 
   const handlePageChange = (newPage) => {
@@ -57,11 +74,11 @@ export const ReservationsList = () => {
     return new Date(dateString).toLocaleDateString("en-GB", options);
   };
 
-  const filteredReservations = reservations.filter(reservation => {
+  const filteredReservations = (reservations || []).filter((reservation) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       reservation.id.toString().includes(searchTerm) ||
-      (reservation.product?.name?.toLowerCase() || "").includes(searchLower) ||
+      (reservation.productName?.toLowerCase() || "").includes(searchLower) ||
       reservation.quantity.toString().includes(searchTerm) ||
       reservation.status?.toLowerCase().includes(searchLower)
     );
@@ -102,7 +119,7 @@ export const ReservationsList = () => {
             <div className="table-responsive rounded-3 shadow-sm">
               <table className="table table-hover align-middle mb-0">
                 <thead className="bg-primary text-white">
-                  <tr>
+                  <tr className="text-center">
                     <th className="ps-4 py-3">ID</th>
                     <th className="py-3">Product</th>
                     <th className="py-3">Order ID</th>
@@ -113,8 +130,8 @@ export const ReservationsList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredReservations.map(reservation => (
-                    <tr key={reservation.id} className="transition-all">
+                  {filteredReservations.map((reservation) => (
+                    <tr key={reservation.id} className="transition-all text-center">
                       <td className="ps-4">
                         <div className="fw-semibold text-dark">
                           #{reservation.id}
@@ -125,10 +142,13 @@ export const ReservationsList = () => {
                       <td>{reservation.quantity}</td>
                       <td>{formatDate(reservation.reservationDate)}</td>
                       <td>
-                        <span className={`badge ${
-                          reservation.status === 'ACTIVE' ? 'bg-success' : 
-                          reservation.status === 'EXPIRED' ? 'bg-danger' : 'bg-warning'
-                        }`}>
+                        <span
+                          className={`badge ${
+                            reservation.status === "PENDING"
+                              ? "bg-warning"
+                              : "bg-warning"
+                          }`}
+                        >
                           {reservation.status}
                         </span>
                       </td>
@@ -139,7 +159,7 @@ export const ReservationsList = () => {
                             onClick={() => handleEditClick(reservation)}
                           >
                             <FontAwesomeIcon icon={faEdit} className="me-1" />
-                            Edit
+                            View
                           </button>
                         </div>
                       </td>
@@ -148,10 +168,48 @@ export const ReservationsList = () => {
                 </tbody>
               </table>
             </div>
-            {/* Pagination controls... (same as in AccountingList) */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <button
+                  className="btn btn-light-blue"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                >
+                  Previous
+                </button>
+                <span className="mx-2">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+                <button
+                  className="btn btn-light-blue"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage + 1 >= totalPages}
+                >
+                  Next
+                </button>
+              </div>
+
+              <div>
+                <select
+                  className="form-select"
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                >
+                  <option value="5">5 per page</option>
+                  <option value="10">10 per page</option>
+                  <option value="20">20 per page</option>
+                </select>
+              </div>
+            </div>
           </>
         )}
       </div>
+      <ReservationEditModal
+        show={showEditModal}
+        handleClose={() => setShowEditModal(false)}
+        reservation={selectedReservation}
+        onSave={handleUpdateReservation}
+      />
     </UserLayout>
   );
 };

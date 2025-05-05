@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import AdminService from "../../services/admin.service";
 import OrderService from "../../services/order.service";
+import CustomerService from "../../services/customer.service";
 import ProductService from "../../services/product.service";
 import CountUp from "react-countup";
 import Card from "./Card";
-import { FaBox, FaShoppingCart, FaUsers } from "react-icons/fa";
+import { FaBox, FaShoppingCart, FaUsers, FaUserFriends } from "react-icons/fa";
 import { dataLine, dataBar } from "./chartData";
 import { Line, Bar } from "react-chartjs-2";
 import "../../assets/style/dashboard.css";
@@ -32,7 +33,13 @@ ChartJS.register(
 
 const Dashboard = () => {
   const [categoryData, setCategoryData] = useState(null);
-  const [data, setData] = useState({ orders: 0, products: 0, users: 0 });
+  const [data, setData] = useState({
+    orders: 0,
+    products: 0,
+    users: 0,
+    customers: 0,
+    invoices: { counts: [], months: [] },
+  });
   const [salesData, setSalesData] = useState(dataLine);
 
   const canFetchOrders = AuthService.hasAnyRole([
@@ -41,20 +48,25 @@ const Dashboard = () => {
     "ADMIN",
   ]);
   const canFetchProducts = AuthService.hasAnyRole([
+    "SALES_MANAGER",
     "INVENTORY_MANAGER",
     "ACCOUNTANT",
     "ADMIN",
   ]);
+  const canFetchInvoices = AuthService.hasAnyRole([
+    "SALES_MANAGER",
+    "ACCOUNTANT",
+    "ADMIN",
+  ]);
+  const canFetchCustomers = AuthService.hasAnyRole(["SALES_MANAGER", "ADMIN"]);
   const canFetchUsers = AuthService.hasAnyRole(["ADMIN"]);
-
-
 
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
         const response = await InvoiceService.getProductsSoldStats();
         const serverData = response.data;
-        
+
         setSalesData({
           labels: serverData.months,
           datasets: [
@@ -62,10 +74,10 @@ const Dashboard = () => {
               ...dataLine.datasets[0],
               label: "Products Sold",
               data: serverData.counts,
-              borderColor: '#10B981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            }
-          ]
+              borderColor: "#10B981",
+              backgroundColor: "rgba(16, 185, 129, 0.1)",
+            },
+          ],
         });
       } catch (error) {
         console.error("Error fetching sales data:", error);
@@ -91,10 +103,16 @@ const Dashboard = () => {
         if (canFetchProducts) {
           promises.push(ProductService.getProductCount());
         }
+        if (canFetchInvoices) {
+          promises.push(InvoiceService.getProductsSoldStats());
+        }
+        if (canFetchCustomers) {
+          promises.push(CustomerService.getCustomerCount());
+        }
 
         const responses = await Promise.all(promises);
 
-        const updatedData = { orders: 0, products: 0, users: 0 };
+        const updatedData = { orders: 0, products: 0, users: 0, customers: 0 };
         let responseIndex = 0;
 
         if (canFetchUsers) {
@@ -106,6 +124,12 @@ const Dashboard = () => {
         if (canFetchProducts) {
           updatedData.products = responses[responseIndex++].data;
         }
+        if (canFetchInvoices) {
+          updatedData.invoices = responses[responseIndex++].data;
+        }
+        if (canFetchCustomers) {
+          updatedData.customers = responses[responseIndex++].data;
+        }
 
         setData(updatedData);
       } catch (error) {
@@ -114,7 +138,13 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [canFetchUsers, canFetchOrders, canFetchProducts]);
+  }, [
+    canFetchUsers,
+    canFetchOrders,
+    canFetchProducts,
+    canFetchInvoices,
+    canFetchCustomers,
+  ]);
 
   const showOrdersCard = AuthService.hasAnyRole([
     "SALES_MANAGER",
@@ -122,21 +152,30 @@ const Dashboard = () => {
     "ADMIN",
   ]);
   const showProductsCard = AuthService.hasAnyRole([
+    "SALES_MANAGER",
     "INVENTORY_MANAGER",
     "ACCOUNTANT",
     "ADMIN",
   ]);
   const showUsersCard = AuthService.hasAnyRole(["ADMIN"]);
+  const showSalesCard = AuthService.hasAnyRole([
+    "SALES_MANAGER",
+    "ACCOUNTANT",
+    "ADMIN",
+  ]);
   const showSalesChart = AuthService.hasAnyRole([
     "SALES_MANAGER",
     "ACCOUNTANT",
     "ADMIN",
   ]);
+  const showCustomerCard = AuthService.hasAnyRole(["SALES_MANAGER", "ADMIN"]);
 
   const visibleCardsCount = [
     showOrdersCard,
     showProductsCard,
     showUsersCard,
+    showSalesCard,
+    showCustomerCard,
   ].filter(Boolean).length;
   const visibleChartsCount = [showSalesChart, true].filter(Boolean).length;
 
@@ -154,26 +193,25 @@ const Dashboard = () => {
               label: "Products by Category",
               data,
               backgroundColor: [
-                'rgba(138, 180, 248, 0.8)',  // Sofisticirana svetloplava
-                'rgba(247, 143, 179, 0.8)',  // Pastelno roze sa malo više energije
-                'rgba(172, 220, 178, 0.8)',  // Prirodna svetlo zelena
-                'rgba(255, 194, 102, 0.8)'   // Topli medni ton
+                "rgba(138, 180, 248, 0.8)", // Sofisticirana svetloplava
+                "rgba(247, 143, 179, 0.8)", // Pastelno roze sa malo više energije
+                "rgba(172, 220, 178, 0.8)", // Prirodna svetlo zelena
+                "rgba(255, 194, 102, 0.8)", // Topli medni ton
               ],
               borderColor: [
-                '#8AB4F8',  // Svetloplava, inspirisana Google dizajnom
-                '#F78FB3',  // Toplije pastelno roze
-                '#ACDCB2',  // Sveža pastelno zelena
-                '#FFC266'   // Medno zlatna nijansa
+                "#8AB4F8", // Svetloplava, inspirisana Google dizajnom
+                "#F78FB3", // Toplije pastelno roze
+                "#ACDCB2", // Sveža pastelno zelena
+                "#FFC266", // Medno zlatna nijansa
               ],
               borderWidth: 1,
-              borderRadius: 10,  // Lagano povećan za moderniji izgled
+              borderRadius: 10, // Lagano povećan za moderniji izgled
               hoverBackgroundColor: [
-                'rgba(138, 180, 248, 1)',  
-                'rgba(247, 143, 179, 1)',
-                'rgba(172, 220, 178, 1)',
-                'rgba(255, 194, 102, 1)'
-              ]
-              
+                "rgba(138, 180, 248, 1)",
+                "rgba(247, 143, 179, 1)",
+                "rgba(172, 220, 178, 1)",
+                "rgba(255, 194, 102, 1)",
+              ],
             },
           ],
         });
@@ -211,7 +249,7 @@ const Dashboard = () => {
                 icon={<FaShoppingCart />}
                 title="Total Orders"
                 value={<CountUp end={data.orders} duration={2} />}
-                colorClass="card-orange"
+                colorClass="card-color"
               />
             )}
           </div>
@@ -231,7 +269,7 @@ const Dashboard = () => {
                 icon={<FaBox />}
                 title="Products"
                 value={<CountUp end={data.products} duration={2} />}
-                colorClass="card-blue"
+                colorClass="card-color"
               />
             )}
           </div>
@@ -251,12 +289,60 @@ const Dashboard = () => {
                 icon={<FaUsers />}
                 title="Active Users"
                 value={<CountUp end={data.users} duration={2} />}
-                colorClass="card-purple"
+                colorClass="card-color"
               />
             )}
           </div>
         )}
-        ,
+        {showSalesCard && (
+          <div
+            className={`col-12 ${
+              visibleCardsCount === 1
+                ? "col-md-8 col-xl-6"
+                : visibleCardsCount === 2
+                ? "col-md-6 col-xl-4"
+                : "col-md-6 col-xl-4"
+            }`}
+          >
+            {canFetchInvoices && (
+              <Card
+                value={
+                  <div className="sales-card-simple">
+                    <CountUp
+                      end={
+                        data.invoices?.counts?.reduce((a, b) => a + b, 0) || 0
+                      }
+                      duration={2}
+                      className="sales-total-number"
+                    />
+                    <span className="sales-label">Products sold this year</span>
+                  </div>
+                }
+                colorClass="card-color"
+              />
+            )}
+          </div>
+        )}
+        {showCustomerCard && (
+          <div
+            className={`col-12 ${
+              visibleCardsCount === 1
+                ? "col-md-8 col-xl-6"
+                : visibleCardsCount === 2
+                ? "col-md-6 col-xl-4"
+                : "col-md-6 col-xl-4"
+            }`}
+          >
+            {canFetchCustomers && (
+              <Card
+                icon={<FaUserFriends />}
+                title="Total Customers"
+                value={<CountUp end={data.customers} duration={2} />}
+                colorClass="card-color"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div
@@ -269,39 +355,39 @@ const Dashboard = () => {
             <div className="chart-card">
               <h3 className="chart-title">Sales Analytics</h3>
               <div className="chart-wrapper">
-              <Line
-              data={salesData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                  legend: { 
-                    position: "top",
-                    labels: {
-                      color: "#6B7280",
-                      font: {
-                        size: 14
-                      }
-                    }
-                  } 
-                },
-                scales: {
-                  y: { 
-                    grid: { color: "#e5e7eb" },
-                    ticks: {
-                      color: "#6B7280",
-                      precision: 0
-                    }
-                  },
-                  x: { 
-                    grid: { display: false },
-                    ticks: {
-                      color: "#6B7280"
-                    }
-                  },
-                },
-              }}
-            />
+                <Line
+                  data={salesData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "top",
+                        labels: {
+                          color: "#6B7280",
+                          font: {
+                            size: 14,
+                          },
+                        },
+                      },
+                    },
+                    scales: {
+                      y: {
+                        grid: { color: "#e5e7eb" },
+                        ticks: {
+                          color: "#6B7280",
+                          precision: 0,
+                        },
+                      },
+                      x: {
+                        grid: { display: false },
+                        ticks: {
+                          color: "#6B7280",
+                        },
+                      },
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>

@@ -30,7 +30,7 @@ const getCategories = () => {
     headers: authHeader(),
   });
 };
-const addProduct = (product) => {
+const addProduct =  (product) => {
   return axios.post(API_URL + "products/add", product, {
     headers: authHeader(),
   });
@@ -52,6 +52,10 @@ const getWarehouses = () => {
   return axios.get(API_URL + "warehouses", { headers: authHeader() });
 };
 
+const deleteProduct = (id) => {
+  return axios.delete(`${API_URL}${id}`, { headers: authHeader() });
+};
+
 const ProductService = {
   getAllProducts,
   updateProduct,
@@ -60,6 +64,9 @@ const ProductService = {
   getCategories,
   addProduct,
   getAllProductsWithoutPagination,
+  addProductToWarehouse,
+  getWarehouses,
+  deleteProduct
 };
 
 export default ProductService;

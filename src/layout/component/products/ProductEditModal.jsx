@@ -3,6 +3,10 @@ import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import "./../../../assets/style/modal-styles.css";
 import ArticleWarehouseService from "../../../services/articleWarehouse.service";
 import ProductService from "../../../services/product.service";
+import WarehouseService from "../../../services/warehouse.service";
+import AuthService from "../../../services/auth.service";
+
+import { toast } from "react-toastify";
 
 const ProductEditModal = ({ show, handleClose, product, onSave }) => {
   const [formData, setFormData] = useState({
@@ -17,6 +21,35 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
   const [loadingWarehouses, setLoadingWarehouses] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState({
+    warehouseName: "",
+    location: "",
+  });
+  const [quantity, setQuantity] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [triedToSubmit, setTriedToSubmit] = useState(false);
+
+  const canAddToWarehouse = AuthService.hasAnyRole([
+    "INVENTORY_MANAGER",
+    "ADMIN",
+  ]);
+  const canDeleteProductFromWarehouse = AuthService.hasAnyRole([
+    "INVENTORY_MANAGER",
+    "ADMIN",
+  ]);
+
+  const canFetchWarehouses = AuthService.hasAnyRole([
+    "ADMIN",
+    "INVENTORY_MANAGER",
+  ]);
+  const canEditProduct = AuthService.hasAnyRole(["ADMIN", "INVENTORY_MANAGER"]);
+
+  useEffect(() => {
+    WarehouseService.getAllWarehouses(0, 1000)
+      .then((response) => setWarehouses(response.data.content))
+      .catch((error) => console.error("Error fetching warehouses:", error));
+  }, []);
 
   useEffect(() => {
     if (product) {
@@ -68,7 +101,23 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
     FASHION: "Fashion",
     HOME: "Home",
     BEAUTY: "Beauty",
-    OTHER: "Other"
+    OTHER: "Other",
+  };
+
+  const validateWarehouseFields = () => {
+    if (!selectedWarehouse.warehouseName || !selectedWarehouse.location) {
+     // toast.error("You must select a warehouse!");
+      return false;
+    }
+    if (!quantity || quantity <= 0) {
+      //toast.error("Enter a valid quantity (minimum 1)!");
+      return false;
+    }
+    if (!purchasePrice || purchasePrice <= 0) {
+     // toast.error("Enter a valid purchase price");
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -92,6 +141,7 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                   name="sku"
                   value={formData.sku}
                   onChange={handleInputChange}
+                  disabled={!canEditProduct}
                 />
               </Form.Group>
             </Col>
@@ -103,6 +153,7 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                   name="productName"
                   value={formData.productName}
                   onChange={handleInputChange}
+                  disabled={!canEditProduct}
                 />
               </Form.Group>
             </Col>
@@ -117,6 +168,7 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                   name="measureUnit"
                   value={formData.measureUnit}
                   onChange={handleInputChange}
+                  disabled={!canEditProduct}
                 />
               </Form.Group>
             </Col>
@@ -134,17 +186,18 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                   </div>
                 ) : (
                   <Form.Select
-                  name="category"
-                  value={formData.category || ""}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {categoryDisplayNames[cat] || cat}
-                    </option>
-                  ))}
-                </Form.Select>
+                    name="category"
+                    value={formData.category || ""}
+                    onChange={handleInputChange}
+                    disabled={!canEditProduct}
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {categoryDisplayNames[cat] || cat}
+                      </option>
+                    ))}
+                  </Form.Select>
                 )}
               </Form.Group>
             </Col>
@@ -173,7 +226,126 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
+              disabled={!canEditProduct}
             />
+            {canAddToWarehouse && (
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-emphasized">
+                  Add to Warehouse
+                </Form.Label>
+                <Row className="mb-3">
+                  <Col md={4}>
+                    <Form.Select
+                      required
+                      value={
+                        selectedWarehouse.warehouseName &&
+                        selectedWarehouse.location
+                          ? `${selectedWarehouse.warehouseName}|${selectedWarehouse.location}`
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const [warehouseName, location] =
+                          e.target.value.split("|");
+                        setSelectedWarehouse({ warehouseName, location });
+                      }}
+                      isInvalid={
+                        triedToSubmit && !selectedWarehouse.warehouseName
+                      }
+                    >
+                      <option value="" disabled hidden>
+                        Select Warehouse*
+                      </option>
+                      {warehouses.map((warehouse) => (
+                        <option
+                          key={warehouse.id}
+                          value={`${warehouse.warehouseName}|${warehouse.location}`}
+                        >
+                          {warehouse.warehouseName} - {warehouse.location}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Control
+                      type="number"
+                      placeholder="Quantity"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      required
+                      min="1"
+                      isInvalid={
+                        triedToSubmit &&
+                        (quantity === "" || parseInt(quantity) <= 0)
+                      }
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      Enter a valid quantity (minimum 1)
+                    </Form.Control.Feedback>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Control
+                      type="number"
+                      step="0.01"
+                      placeholder="Purchase Price"
+                      value={purchasePrice}
+                      onChange={(e) => setPurchasePrice(e.target.value)}
+                      required
+                      min="0.01"
+                      isInvalid={
+                        triedToSubmit &&
+                        (purchasePrice === "" || parseFloat(purchasePrice) <= 0)
+                      }
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      Enter a valid purchase price 
+                    </Form.Control.Feedback>
+                  </Col>
+                  <Col md={3}>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        setTriedToSubmit(true);
+                        if (!validateWarehouseFields()) return;
+
+                        const warehousePayload = {
+                          warehouseName: selectedWarehouse.warehouseName,
+                          location: selectedWarehouse.location,
+                          articles: [
+                            {
+                              product: { id: product.id },
+                              purchasePrice: parseFloat(purchasePrice),
+                              quantity: parseInt(quantity),
+                            },
+                          ],
+                        };
+
+                        ProductService.addProductToWarehouse(warehousePayload)
+                          .then(() => {
+                            ArticleWarehouseService.getWarehousesByProduct(
+                              product.id
+                            ).then((response) =>
+                              setWarehouseData(response.data)
+                            );
+                            setQuantity("");
+                            setPurchasePrice("");
+                            setSelectedWarehouse({
+                              warehouseName: "",
+                              location: "",
+                            });
+                            setTriedToSubmit(false);
+                            toast.success("Added to warehouse!");
+                          })
+                          .catch((error) =>
+                            toast.error("Error: " + error.message)
+                          );
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </Col>
+                </Row>
+              </Form.Group>
+            )}
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label className="form-label-emphasized">
@@ -199,6 +371,7 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                       <th>Location</th>
                       <th>Quantity</th>
                       <th>Purchase Price</th>
+                      {canDeleteProductFromWarehouse && <th>Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -208,6 +381,32 @@ const ProductEditModal = ({ show, handleClose, product, onSave }) => {
                         <td>{item.warehouse.location}</td>
                         <td>{item.quantity}</td>
                         <td>${item.purchasePrice.toFixed(2)}</td>
+                        {canDeleteProductFromWarehouse && (
+                          <td>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => {
+                                ArticleWarehouseService.deleteArticleWarehouse(
+                                  item.id
+                                )
+                                  .then(() => {
+                                    ArticleWarehouseService.getWarehousesByProduct(
+                                      product.id
+                                    ).then((response) =>
+                                      setWarehouseData(response.data)
+                                    );
+                                    toast.success("Removed from warehouse");
+                                  })
+                                  .catch((error) =>
+                                    toast.error("Error: " + error.message)
+                                  );
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

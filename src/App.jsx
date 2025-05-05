@@ -22,65 +22,78 @@ import UserDashboard from "./layout/component/users/UserDashboard.jsx";
 import AddWarehouse from "./layout/component/warehouse/AddWrehouse.jsx";
 import AddProduct from "./layout/component/products/AddProduct.jsx";
 import { ReservationsList } from "./layout/component/reservations/ReservationsList.jsx";
+import CustomerList from "./layout/component/customers/CustomerList.jsx";
+import { NotificationProvider } from "./common/context/NotificationContext.jsx";
 
 const App = () => {
- 
-
   return (
-    <AuthProvider>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
-      <Routes>
-        <>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/registerSuccess" element={<RegisterSuccess />} />
-          <Route path="/verify" element={<Verify />} />
-        </>
-
-        <Route
-          element={
-            <ProtectedRoute
-              allowedRoles={[
-                "ADMIN",
-                "SALES_MANAGER",
-                "INVENTORY_MANAGER",
-                "ACCOUNTANT",
-              ]}
-            />
-          }
-        >
-          <Route path="/" element={<Navigate to="/account" />} />
-          <Route path="/account" element={<UserDashboard />} />
-          <Route path="/account/profile" element={<UserOverview />} />
-          <Route path="/account/usersList" element={<UsersList />} />
-          <Route path="/account/productsList" element={<ProductList />} />
-          <Route path="/account/add-product" element={<AddProduct />} />
-          <Route path="/account/ordersList" element={<OrdersList />} />
-          <Route path="/account/invoiceList" element={<InvoiceList />} />
-          <Route path="/account/accountingList" element={<AccountingList />} />
-          <Route path="/account/reservations" element={<ReservationsList />} />
-
-
-          <Route path="/account/warehouseList" element={<WarehouseList />} />
-          <Route path="/account/add-warehouse" element={<AddWarehouse />} />
-          <Route
-            path="/account/warehouse/:warehouseId/articles"
-            element={<ArticleWarehouseList />}
+   
+      <AuthProvider>
+        <NotificationProvider>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
           />
-        </Route>
-      </Routes>
-    </AuthProvider>
+          <Routes>
+            <>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/registerSuccess" element={<RegisterSuccess />} />
+              <Route path="/verify" element={<Verify />} />
+            </>
+
+            <Route
+              element={
+                <ProtectedRoute
+                  allowedRoles={[
+                    "ADMIN",
+                    "SALES_MANAGER",
+                    "INVENTORY_MANAGER",
+                    "ACCOUNTANT",
+                  ]}
+                />
+              }
+            >
+              <Route path="/" element={<Navigate to="/account" />} />
+              <Route path="/account" element={<UserDashboard />} />
+              <Route path="/account/profile" element={<UserOverview />} />
+              <Route path="/account/usersList" element={<UsersList />} />
+              <Route path="/account/customerList" element={<CustomerList />} />
+              <Route path="/account/productsList" element={<ProductList />} />
+              <Route path="/account/add-product" element={<AddProduct />} />
+              <Route path="/account/ordersList" element={<OrdersList />} />
+              <Route path="/account/invoiceList" element={<InvoiceList />} />
+              <Route
+                path="/account/accountingList"
+                element={<AccountingList />}
+              />
+              <Route
+                path="/account/reservations"
+                element={<ReservationsList />}
+              />
+
+              <Route
+                path="/account/warehouseList"
+                element={<WarehouseList />}
+              />
+
+              <Route path="/account/add-warehouse" element={<AddWarehouse />} />
+              <Route
+                path="/account/warehouse/:warehouseId/articles"
+                element={<ArticleWarehouseList />}
+              />
+            </Route>
+          </Routes>
+        </NotificationProvider>
+      </AuthProvider>
   );
 };
 

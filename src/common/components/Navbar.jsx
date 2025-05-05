@@ -1,21 +1,37 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaSignOutAlt, FaChevronDown, FaBell, FaUser } from "react-icons/fa";
+import {
+  FaSignOutAlt,
+  FaChevronDown,
+  FaCheckCircle,
+  FaBell,
+  FaUser,
+  FaTimes,
+} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../common/AuthProvider";
 import "../../assets/style/Navbar.css";
+import { useNotifications } from "../context/NotificationContext";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "New message received", read: false },
-    { id: 2, text: "System update available", read: true },
-  ]);
+  const {
+    notifications,
+    isLoading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications();
 
   const navigate = useNavigate();
   const { currentUser, logOut } = useAuth();
   const dropdownRef = useRef(null);
   const notificationsRef = useRef(null);
+
+  /*  useEffect(() => {
+    console.log("Current notifications:", notifications);
+  }, [notifications]); */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,7 +78,7 @@ const Navbar = () => {
     setDropdownOpen(false);
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
@@ -116,36 +132,84 @@ const Navbar = () => {
                       display: "block",
                     }}
                   >
-                    <li className="dropdown-header">
-                      <div className="d-flex justify-content-center align-items-center p-2">
-                        <h6 className="mb-0">Notifications</h6>
+                    <li className="dropdown-header notification-header">
+                      <div className="d-flex justify-content-between align-items-center p-3">
+                        <h6 className="mb-0 text-dark fw-semibold fs-6">
+                          <FaBell className="me-2 text-primary" />
+                          Notifications
+                        </h6>
+                        {unreadCount > 0 && (
+                          <button
+                            className="btn btn-link text-purple p-0 small fw-medium hover-underline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAllAsRead();
+                            }}
+                          >
+                          
+                            Mark all as read
+                          </button>
+                        )}
                       </div>
                     </li>
                     <li>
                       <hr className="dropdown-divider" />
                     </li>
-                    {notifications.map((notification) => (
-                      <li key={notification.id}>
-                        <div
-                          className={`dropdown-item ${
-                            !notification.read ? "fw-bold" : ""
-                          }`}
-                        >
-                          {notification.text}
-                        </div>
+                    {notifications.length === 0 ? (
+                      <li className="text-center text-muted py-2">
+                        You have no notifications yet.
                       </li>
-                    ))}
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-                    <li>
-                      <Link
-                        to="/notifications"
-                        className="dropdown-item text-center"
-                      >
-                        View all notifications
-                      </Link>
-                    </li>
+                    ) : (
+                      [...notifications]
+                        .sort(
+                          (a, b) =>
+                            new Date(b.timestamp) - new Date(a.timestamp)
+                        )
+                        .map((notification) => (
+                          <li
+                            key={`${notification.id}-${notification.timestamp}`}
+                            className="px-2 py-1"
+                          >
+                            <div
+                              className={`dropdown-item d-flex justify-content-between align-items-start ${
+                                !notification.isRead ? "fw-bold" : ""
+                              } ${
+                                notification.status === "ERROR"
+                                  ? "text-danger"
+                                  : ""
+                              }`}
+                              onClick={() => markAsRead(notification.id)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              <div className="flex-grow-1 me-2">
+                                <small className="text-muted d-block">
+                                  {new Date(
+                                    notification.timestamp
+                                  ).toLocaleString("en-GB", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </small>
+                                {notification.content}
+                              </div>
+                              <button
+                                className="btn btn-link text-danger p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notification.id);
+                                }}
+                                title="Delete notification"
+                              >
+                                <FaTimes />
+                              </button>
+                            </div>
+                          </li>
+                        ))
+                    )}
+                   
                   </ul>
                 </li>
 

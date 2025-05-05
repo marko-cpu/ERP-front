@@ -25,7 +25,7 @@
       <Sidebar loading={loading} />
       <div className="flex-grow-1">
         <Navbar />
-        <div className="p-3">
+        <div>
           {children}
         </div>
       </div>

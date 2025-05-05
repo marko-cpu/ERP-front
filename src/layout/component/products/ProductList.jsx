@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductService from "../../../services/product.service";
+import AuthService from "../../../services/auth.service";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ProductEditModal from "./ProductEditModal";
 import UserLayout from "../../UserLayout";
@@ -24,6 +25,19 @@ const ProductList = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(5);
   const [categories, setCategories] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [productToDelete, setProductToDelete] =
+      useState(null);
+
+    const canAddProducts = AuthService.hasAnyRole([
+      "INVENTORY_MANAGER",
+      "ADMIN",
+    ]);
+    const canDeleteProduct = AuthService.hasAnyRole([
+      "INVENTORY_MANAGER",
+      "ADMIN",
+    ]);
+
 
   useEffect(() => {
     fetchProducts();
@@ -53,6 +67,19 @@ const ProductList = () => {
     setSelectedProduct(product);
     setShowEditModal(true);
   };
+
+  const handleDelete = async () => {
+    try{ ProductService.deleteProduct(productToDelete)
+      toast.success("Product deleted successfully", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      fetchProducts();
+    } catch (error) {} finally {
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
+    }
+    };
 
   const handleUpdateProduct = (productId, updatedData) => {
     ProductService.updateProduct(productId, updatedData)
@@ -98,6 +125,25 @@ const ProductList = () => {
 
   return (
     <UserLayout>
+       {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="delete-confirm-modal">
+            <h5>Confirm Delete</h5>
+            <p>Are you sure you want to delete this order?</p>
+            <div className="modal-buttons">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="content p-4">
         <div className="d-flex align-items-center justify-content-between mb-4">
           <h2 className="fs-2 fw-semibold form-title">
@@ -118,6 +164,7 @@ const ProductList = () => {
               />
             </div>
           </div>
+          {canAddProducts && (
           <button
             className="btn btn-light-blue d-flex align-items-center gap-2"
             onClick={() => navigate("/account/add-product")}
@@ -125,6 +172,7 @@ const ProductList = () => {
             <FontAwesomeIcon icon={faPlus} />
             Add Product
           </button>
+          )}
         </div>
 
         {loading ? (
@@ -138,7 +186,7 @@ const ProductList = () => {
             <div className="table-responsive rounded-3 shadow-sm">
               <table className="table table-hover align-middle mb-0">
                 <thead className="bg-primary text-white">
-                  <tr>
+                  <tr className="text-center">
                     <th className="ps-4 py-3">SKU</th>
                     <th className="py-3">Product Name</th>
                     <th className="py-3">Measure Unit</th>
@@ -150,7 +198,7 @@ const ProductList = () => {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
-                    <tr key={product.id} className="transition-all">
+                    <tr key={product.id} className="transition-all text-center">
                       <td className="ps-4">
                         <div className="fw-semibold text-dark">
                           {product.sku}
@@ -179,15 +227,18 @@ const ProductList = () => {
                             <FontAwesomeIcon icon={faEdit} className="me-1" />
                             Edit
                           </button>
+                          {canDeleteProduct && (
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => {
-                              /* Add delete functionality */
+                              setProductToDelete(product.id);
+                              setShowDeleteConfirm(true);
                             }}
                           >
                             <FontAwesomeIcon icon={faTrash} className="me-1" />
                             Delete
                           </button>
+                          )}
                         </div>
                       </td>
                     </tr>

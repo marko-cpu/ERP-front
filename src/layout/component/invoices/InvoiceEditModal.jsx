@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Table } from "react-bootstrap";
 import { toast } from "react-toastify";
 import "../../../assets/style/modal-styles.css";
 
-const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
+const InvoiceEditModal = ({ show, handleClose, invoice, onSave, readOnlyMode = true }) => {
   const [formData, setFormData] = useState({
     invoiceNumber: "",
     payDate: "",
@@ -96,7 +96,7 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
       <Modal.Header closeButton>
         <Modal.Title>Edit Invoice {formData.invoiceNumber}</Modal.Title>
       </Modal.Header>
-      
+
       <Modal.Body>
         <Form>
           {/* Основне информације */}
@@ -107,10 +107,11 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                 <Form.Control
                   value={formData.invoiceNumber}
                   onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
+                  readOnly={readOnlyMode}
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="text-secondary">Issue Date *</Form.Label>
@@ -118,10 +119,11 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                   type="date"
                   value={formData.payDate}
                   onChange={(e) => handleInputChange('payDate', e.target.value)}
+                  disabled={readOnlyMode}
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="text-secondary">Total Amount (€)</Form.Label>
@@ -130,6 +132,7 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                   step="0.01"
                   value={formData.totalPrice}
                   onChange={(e) => handleInputChange('totalPrice', e.target.value)}
+                  disabled={readOnlyMode}
                 />
               </Form.Group>
             </Col>
@@ -144,20 +147,22 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                 <Form.Control
                   value={formData.customer.firstName}
                   onChange={(e) => handleNestedChange('customer', 'firstName', e.target.value)}
+                  readOnly={readOnlyMode}
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={3}>
               <Form.Group>
                 <Form.Label className="text-secondary">Last Name</Form.Label>
                 <Form.Control
                   value={formData.customer.lastName}
                   onChange={(e) => handleNestedChange('customer', 'lastName', e.target.value)}
+                  readOnly={readOnlyMode}
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="text-secondary">Email</Form.Label>
@@ -165,6 +170,7 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                   type="email"
                   value={formData.customer.email}
                   onChange={(e) => handleNestedChange('customer', 'email', e.target.value)}
+                  readOnly={readOnlyMode}
                 />
               </Form.Group>
             </Col>
@@ -182,7 +188,7 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="text-secondary">Order Date</Form.Label>
@@ -190,6 +196,7 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                   type="date"
                   value={formData.accounting.date}
                   onChange={(e) => handleNestedChange('accounting', 'date', e.target.value)}
+                  disabled={readOnlyMode}
                 />
               </Form.Group>
             </Col>
@@ -202,7 +209,10 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
               <tr>
                 <th>Product Name</th>
                 <th>Quantity</th>
+                <th>Category</th>
+                <th>Unit</th>
                 <th>Unit Price</th>
+                <th>PDV</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -211,8 +221,11 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
                 <tr key={index}>
                   <td>{product.product?.productName || "N/A"}</td>
                   <td>{product.quantity}</td>
+                  <td>{product.product?.category || "N/A"}</td>
+                  <td>{product.product?.measureUnit || "N/A"}</td>
                   <td>€{product.product?.price?.toFixed(2) || "0.00"}</td>
-                  <td>€{(product.quantity * (product.product?.price || 0)).toFixed(2)}</td>
+                  <td>€{product.pdv?.toFixed(2) || "0.00"}</td>
+                  <td>€{(product?.totalPrice).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -222,11 +235,13 @@ const InvoiceEditModal = ({ show, handleClose, invoice, onSave }) => {
 
       <Modal.Footer className="modal-footer-custom">
         <Button variant="secondary" onClick={handleClose}>
-          Cancel
+          Close
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Save Changes
-        </Button>
+        {!readOnlyMode && (
+          <Button variant="primary" onClick={handleSubmit}>
+            Save Changes
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

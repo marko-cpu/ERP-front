@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminService from "../../../services/admin.service";
-import UserEditModal from "./UserEditModal.jsx";
+import CustomerService from "../../../services/customer.service";
+import CustomerEditModal from "./CustomerEditModal.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserLayout from "../../UserLayout";
 import {
@@ -9,43 +9,40 @@ import {
   faCircle,
   faEdit,
   faSearch,
-  faUser,
+  faUsers,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import "../../../assets/style/table-list-styles.css";
 
-const UsersList = () => {
+const CustomerList = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [availableRoles, setAvailableRoles] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+   const [customerToDelete, setCustomerToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
-    fetchUsers();
+    fetchCustomers();
   }, [currentPage, pageSize]);
 
-  const fetchUsers = async () => {
+  const fetchCustomers = async () => {
     try {
-      const usersResponse = await AdminService.getAllUsers(
+      const response = await CustomerService.getAllCustomers(
         currentPage,
         pageSize
       );
-      setUsers(usersResponse.data.content); // Set current page users
-      setTotalPages(usersResponse.data.totalPages);
-
-      const rolesResponse = await AdminService.getRoles();
-      setAvailableRoles(rolesResponse.data);
+      setCustomers(response.data.content);
+      setTotalPages(response.data.totalPages);
       setLoading(false);
     } catch (error) {
-      toast.error("Error fetching data");
-    } finally {
+      toast.error("Error fetching customers");
       setLoading(false);
     }
   };
@@ -59,46 +56,71 @@ const UsersList = () => {
     setCurrentPage(0);
   };
 
-  const handleEditClick = (user) => {
-    setSelectedUser(user);
+  const handleEditClick = (customer) => {
+    setSelectedCustomer(customer);
     setShowEditModal(true);
   };
+ const handleDelete = async () => {
+  try {
+    await CustomerService.deleteCustomer(customerToDelete);
+    toast.success("Customer deleted successfully");
+    fetchCustomers();
+  } catch (error) {
+    // Provera za specifičnu grešku
+    if (error.response && error.response.data.includes("cannot be deleted")) {
+      toast.error("Customer cannot be deleted because they have associated orders");
+    } else {
+      toast.error(`Error deleting customer: ${error.message}`);
+    }
+  } finally {
+    setShowDeleteConfirm(false);
+  }
+};
 
-  const handleUpdateUser = (userId, updatedData) => {
-    AdminService.updateUser(userId, updatedData)
+  const handleUpdateCustomer = (customerId, updatedData) => {
+    CustomerService.updateCustomer(customerId, updatedData)
       .then(() => {
-        toast.success("User updated successfully", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        fetchUsers(); // Refresh the user list
+        toast.success("Customer updated successfully");
+        fetchCustomers();
       })
       .catch((error) => {
-        toast.error(`Error updating User : ${error.message}`, {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.error(`Error updating customer: ${error.message}`);
       });
   };
 
-  const filteredUsers = users.filter((customerWrapper) => {
-    const user = customerWrapper;
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    return (
-      fullName.includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phoneNumber.includes(searchTerm)
-    );
+  const filteredCustomers = customers.filter((customer) => {
+    const searchContent =
+      `${customer.firstName} ${customer.lastName} ${customer.email} ${customer.phone} ${customer.address}`.toLowerCase();
+    return searchContent.includes(searchTerm.toLowerCase());
   });
 
   return (
     <>
       <UserLayout>
+        {showDeleteConfirm && (
+          <div className="modal-overlay">
+            <div className="delete-confirm-modal">
+              <h5>Confirm Delete</h5>
+              <p>Are you sure you want to delete this order?</p>
+              <div className="modal-buttons">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={handleDelete}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="content p-4">
           <div className="d-flex align-items-center justify-content-between mb-4">
             <h2 className="fs-2 fw-semibold form-title">
-              <FontAwesomeIcon icon={faUser} className="me-2 text-primary" />
-              Users
+              <FontAwesomeIcon icon={faUsers} className="me-2 text-primary" />
+              Customers
             </h2>
             <div className="w-50">
               <div className="input-group">
@@ -107,7 +129,7 @@ const UsersList = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder="Search customers..."
                   className="form-control"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -124,61 +146,51 @@ const UsersList = () => {
           ) : (
             <>
               <div className="table-responsive rounded-3 shadow-sm border border-light-subtle">
-              <table className="table table-hover align-middle mb-0">
+                <table className="table table-hover align-middle mb-0">
                   <thead className="bg-primary text-white">
                     <tr className="text-center">
                       <th className="ps-4 py-3 text-uppercase small">Name</th>
+                      <th className="py-3 text-uppercase small">Address</th>
+                      <th className="py-3 text-uppercase small">City</th>
+                      <th className="py-3 text-uppercase small">Postal Code</th>
                       <th className="py-3 text-uppercase small">Email</th>
                       <th className="py-3 text-uppercase small">Phone</th>
-                      <th className="py-3 text-uppercase small">Created</th>
-                      <th className="py-3 text-uppercase small">Status</th>
-                      <th className="py-3 text-uppercase small">Role</th>
                       <th className="pe-4 py-3 text-uppercase small text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
-                      <tr key={user.userId} className="transition-all text-center">
-                        <td className="ps-4 ">
-                          <div className="fw-semibold text-dark">{`${user.firstName} ${user.lastName}`}</div>
-                        </td>
-                        <td>
-                          <span className="text-muted">{user.email}</span>
-                        </td>
-                        <td>{user.phoneNumber || "-"}</td>
-                        <td>
-                          <div className="text-secondary">
-                            {new Date(user.createdTime).toLocaleDateString(
-                              "en-GB"
-                            )}
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer.id} className="transition-all text-center">
+                        <td className="ps-4">
+                          <div className="fw-semibold text-dark">
+                            {`${customer.firstName} ${customer.lastName}`}
                           </div>
                         </td>
-                        <td>
-                          {user.enabled ? (
-                            <FontAwesomeIcon
-                              icon={faCircleCheck}
-                              className="text-success fs-5"
-                            />
-                          ) : (
-                            <FontAwesomeIcon
-                              icon={faCircle}
-                              className="text-light-emphasis fs-5"
-                            />
-                          )}
-                        </td>
-                        <td>
-                          <span className="badge text-secondary fw-bold ">
-                            {user.roles?.[0]?.name || "No Role"}
-                          </span>
-                        </td>
+                        <td>{customer.address}</td>
+                        <td>{customer.city}</td>
+                        <td>{customer.postalCode}</td>
+                        <td>{customer.email}</td>
+                        <td>{customer.phone}</td>
                         <td className="pe-4 text-end">
+                        <div className="d-flex justify-content-end">
                           <button
-                            className="btn btn-sm btn-light-blue"
-                            onClick={() => handleEditClick(user)}
+                            className="btn btn-sm btn-light-blue me-2"
+                            onClick={() => handleEditClick(customer)}
                           >
                             <FontAwesomeIcon icon={faEdit} className="me-2" />
                             Edit
                           </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              setCustomerToDelete(customer.id);
+                              setShowDeleteConfirm(true);
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="me-2" />
+                            Delete
+                          </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -221,15 +233,14 @@ const UsersList = () => {
           )}
         </div>
       </UserLayout>
-      <UserEditModal
+      <CustomerEditModal
         show={showEditModal}
         handleClose={() => setShowEditModal(false)}
-        user={selectedUser}
-        roles={availableRoles}
-        onSave={handleUpdateUser}
+        customer={selectedCustomer}
+        onSave={handleUpdateCustomer}
       />
     </>
   );
 };
 
-export default UsersList;
+export default CustomerList;

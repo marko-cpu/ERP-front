@@ -32,6 +32,12 @@ const Sidebar = ({ loading }) => {
       roles: ["ADMIN"],
     },
     {
+      icon: <FaUsers />,
+      label: "Customers",
+      path: "/account/customerList",
+      roles: ["SALES_MANAGER", "ADMIN"],
+    },
+    {
       icon: <FaShoppingCart />,
       label: "Orders",
       path: "/account/ordersList",
@@ -75,7 +81,7 @@ const Sidebar = ({ loading }) => {
   );
 
   return (
-    <div className="sidebar  text-white vh-100 p-3 border-end shadow-lg">
+    <div className="sidebar  text-white  p-3 border-end shadow-lg">
       <div className="sidebar-header text-center mb-4">
         <h1 className="fs-4 fw-bold mb-0 py-3 border-bottom border-secondary">
           <span className="text-gradient">ERP</span>

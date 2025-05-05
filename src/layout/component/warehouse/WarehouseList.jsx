@@ -21,6 +21,9 @@ const WarehouseList = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(5);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+   const [warehouseToDelete, setWarehouseToDelete] = useState(null);
+  
 
   useEffect(() => {
     fetchWarehouses();
@@ -38,19 +41,25 @@ const WarehouseList = () => {
         setLoading(false);
       }
     );
-  }
+  };
 
-
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this warehouse?")) {
-      WarehouseService.deleteWarehouse(id).then(() => {
-        toast.success("Warehouse deleted successfully", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        setWarehouses(warehouses.filter((warehouse) => warehouse.id !== id));
+  const handleDelete = async () => {
+    try {
+     await WarehouseService.deleteWarehouse(warehouseToDelete);
+      toast.success("Warehouse deleted successfully", {
+        position: "top-right",
+        autoClose: 3000,
       });
+      setWarehouses(warehouses.filter((warehouse) => warehouse.id !== warehouseToDelete));
+    } catch (error) {
+      console.error("Error deleting warehouse", error);
+      toast.error("Error deleting warehouse", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setShowDeleteConfirm(false);
+      setWarehouseToDelete(null);
     }
   };
 
@@ -74,6 +83,25 @@ const WarehouseList = () => {
 
   return (
     <UserLayout>
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="delete-confirm-modal">
+            <h5>Confirm Delete</h5>
+            <p>Are you sure you want to delete this order?</p>
+            <div className="modal-buttons">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={handleDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="content p-4">
         <div className="d-flex align-items-center justify-content-between mb-4 ">
           <h2 className="fs-2 fw-semibold form-title">
@@ -111,54 +139,60 @@ const WarehouseList = () => {
           </div>
         ) : (
           <>
-          <div className="table-responsive rounded-3 shadow-sm">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="ps-4 py-3">Name</th>
-                  <th className="py-3">Location</th>
-                  <th className="pe-4 py-3 text-end ">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredWarehouses.map((warehouse) => (
-                  <tr key={warehouse.id} className="transition-all">
-                    <td className="ps-4">
-                      <div className="fw-semibold text-dark">
-                        {warehouse.warehouseName}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="text-muted">{warehouse.location}</span>
-                    </td>
-                    <td>
-                      <div className="pe-4 text-end">
-                        <button
-                          className="btn btn-sm btn-light-blue m-1"
-                          onClick={() =>
-                            navigate(
-                              `/account/warehouse/${warehouse.id}/articles`
-                            )
-                          }
-                        >
-                          <FontAwesomeIcon icon={faEye} className="me-2" />
-                          View Articles
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(warehouse.id)}
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="me-1" />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+            <div className="table-responsive rounded-3 shadow-sm">
+              <table className="table table-hover align-middle mb-0">
+                <thead className="bg-primary text-white">
+                  <tr>
+                    <th className="ps-4 py-3">Name</th>
+                    <th className="py-3">Location</th>
+                    <th className="pe-4 py-3 text-end ">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="d-flex justify-content-between align-items-center mt-3">
+                </thead>
+                <tbody>
+                  {filteredWarehouses.map((warehouse) => (
+                    <tr key={warehouse.id} className="transition-all">
+                      <td className="ps-4">
+                        <div className="fw-semibold text-dark">
+                          {warehouse.warehouseName}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="text-muted">{warehouse.location}</span>
+                      </td>
+                      <td>
+                        <div className="pe-4 text-end">
+                          <button
+                            className="btn btn-sm btn-light-blue m-1"
+                            onClick={() =>
+                              navigate(
+                                `/account/warehouse/${warehouse.id}/articles`,
+                                {
+                                  state: { warehouse },
+                                }
+                              )
+                            }
+                          >
+                            <FontAwesomeIcon icon={faEye} className="me-2" />
+                            View Articles
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              setWarehouseToDelete(warehouse.id);
+                              setShowDeleteConfirm(true);
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="me-1" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mt-3">
               <div>
                 <button
                   className="btn btn-light-blue"

@@ -40,6 +40,7 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
   const [currentProduct, setCurrentProduct] = useState({
     product: null,
     quantity: 1,
+    pdvRate: 20, 
   });
   const [productSearch, setProductSearch] = useState("");
   const [isDropdownVisible, setIsDropdownVisible] = useState(true);
@@ -126,11 +127,11 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
 
   const addProduct = () => {
     if (!currentProduct.product || currentProduct.quantity <= 0) {
-      setError("Изаберите производ и унесите валидну количину");
+      setError("Please select a product and enter a valid quantity");
       return;
     }
 
-    const pdvRate = currentProduct.product.pdvRate || 20;
+    const pdvRate = currentProduct.product.pdvRate || currentProduct.pdvRate;
     const price = currentProduct.product.price;
     const quantity = currentProduct.quantity;
 
@@ -140,7 +141,7 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
     const newProduct = {
       product: currentProduct.product,
       quantity: quantity,
-      pdvRate: pdvRate, // Чувамо стопу на нивоу ставке
+      pdvRate: pdvRate, 
       pdv: pdvAmount,
       totalPrice: totalPrice,
     };
@@ -150,8 +151,9 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
       products: [...formData.products, newProduct],
     });
 
-    setCurrentProduct({ product: null, quantity: 1 });
+    setCurrentProduct({ product: null, quantity: 1, pdvRate: 20  });
     setProductSearch("");
+    setIsDropdownVisible(true);
     setError("");
   };
   const removeProduct = (index) => {
@@ -207,6 +209,7 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
         products: formData.products.map((p) => ({
           product: { id: p.product.id },
           quantity: p.quantity,
+          pdvRate: p.pdvRate,
         })),
       });
 
@@ -217,7 +220,9 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
         autoClose: 3000,
       });
     } catch (error) {
-      toast.error(`Error creating order: ${error.message}`, {
+      const errorMsg =
+    error.response?.data?.message || error.response?.data || "Unknown error occurred";
+      toast.error(`Error creating order: ${errorMsg}`, {
         position: "top-right",
         autoClose: 5000,
       });
@@ -262,9 +267,7 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
                   }
                   className="bg-light"
                 />
-                <Form.Text className="text-muted">
-                  Current logged in user
-                </Form.Text>
+               
               </Form.Group>
             </Col>
           </Row>
@@ -552,7 +555,7 @@ const OrderCreateModal = ({ show, handleClose, refreshOrders }) => {
                   onChange={(e) =>
                     setCurrentProduct({
                       ...currentProduct,
-                      pdv: parseInt(e.target.value),
+                      pdvRate: parseInt(e.target.value),
                     })
                   }
                 />

@@ -1,33 +1,72 @@
 .initials-circle {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #2f86e2;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-  }
-  
-  .initials-circle-lg {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #2f86e2;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-  
-  .dropdown-header {
-    padding: 0.5rem 1rem;
-    background-color: #f8f9fa;
-  }
-  
-  .dropdown-divider {
-    margin: 0.25rem 0;
-  }
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: #2f86e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+.initials-circle-lg {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+.dropdown-header {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+}
+
+.dropdown-divider {
+  margin: 0.25rem 0;
+}
+
+.dropdown-item.text-danger {
+  border-left: 3px solid #dc3545;
+  background-color: #fff3f3;
+}
+
+.dropdown-item .text-muted {
+  font-size: 0.75rem;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+
+.notification-header {
+  border-bottom: 2px solid #f0f0f0;
+  background-color: #fafcff;
+}
+
+.dropdown-header h6 {
+  letter-spacing: 0.5px;
+  font-size: 0.95rem;
+}
+
+.btn-link.text-purple {
+  color: #6c5ce7;
+  transition: all 0.2s ease;
+}
+
+.btn-link.text-purple:hover {
+  color: #4b3bca;
+  text-decoration: none;
+}
+
+.hover-underline:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+
