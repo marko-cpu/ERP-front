@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AccountingService from "../../../services/accounting.service.jsx";
+import OrderService from "../../../services/order.service.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserLayout from "../../UserLayout.jsx";
 import AccountingEditModal from "./AccountingEditModal.jsx";
@@ -9,6 +10,7 @@ import {
   faSearch,
   faCalculator,
   faEdit,
+  faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AccountingList = () => {
@@ -22,13 +24,22 @@ const AccountingList = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAccounting, setSelectedAccounting] = useState(null);
+  const [showConfirmPay, setShowConfirmPay] = useState(false);
+  const [accToPay, setAccToPay] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   useEffect(() => {
     fetchAccountings();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, selectedStatus]);
 
   const fetchAccountings = () => {
-    AccountingService.getAllAccountings(currentPage, pageSize).then(
+    const params = {
+      page: currentPage,
+      size: pageSize,
+      status: selectedStatus !== "all" ? selectedStatus : null,
+    };
+
+    AccountingService.getAllAccountings(params).then(
       (response) => {
         setAccountings(response.data?.content || []);
         setTotalPages(response.data?.totalPages || 0);
@@ -41,13 +52,30 @@ const AccountingList = () => {
     );
   };
 
+  const handlePay = async () => {
+    if (!accToPay) return;
+
+    OrderService.payInvoice(accToPay.id, accToPay.totalPrice)
+      .then(() => {
+        toast.success("Payment successful!");
+        fetchAccountings();
+      })
+      .catch((error) => {
+        toast.error("Payment failed: " + error.response?.data);
+      })
+      .finally(() => {
+        setShowConfirmPay(false);
+        setAccToPay(null);
+      });
+  };
+
   const handleEditClick = async (accounting) => {
     try {
       const response = await AccountingService.getAccountingById(accounting.id);
       setSelectedAccounting(response.data);
       setShowEditModal(true);
     } catch (error) {
-      toast.error('Error fetching accounting details');
+      toast.error("Error fetching accounting details");
     }
   };
 
@@ -106,6 +134,25 @@ const AccountingList = () => {
 
   return (
     <UserLayout>
+      {showConfirmPay && (
+        <div className="modal-overlay">
+          <div className="delete-confirm-modal">
+            <h5>Confirm Payment</h5>
+            <p>Are you sure you want to mark this as paid?</p>
+            <div className="modal-buttons">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowConfirmPay(false)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-success" onClick={handlePay}>
+                Pay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="content p-4">
         <div className="d-flex align-items-center justify-content-between mb-4">
           <h2 className="fs-2 fw-semibold form-title">
@@ -127,6 +174,20 @@ const AccountingList = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+            </div>
+            <div className="input-group w-28">
+              <span className="input-group-text">
+                <FontAwesomeIcon icon={faFilter} />
+              </span>
+              <select
+                className="form-select"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="0">Pending</option>
+                <option value="1">Paid</option>
+              </select>
             </div>
             {/*  <div className="input-group w-25">
                 <span className="input-group-text">
@@ -171,7 +232,10 @@ const AccountingList = () => {
                     const user = order.user || {};
 
                     return (
-                      <tr key={accounting.id} className="transition-all text-center">
+                      <tr
+                        key={accounting.id}
+                        className="transition-all text-center"
+                      >
                         <td className="ps-4">
                           <div className="fw-semibold text-dark">
                             #{accounting.id}
@@ -208,6 +272,19 @@ const AccountingList = () => {
                             >
                               <FontAwesomeIcon icon={faEdit} className="me-1" />
                               Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => {
+                                setAccToPay({
+                                  id: accounting.id,
+                                  totalPrice: accounting.totalPrice,
+                                });
+                                setShowConfirmPay(true);
+                              }}
+                              disabled={accounting.state !== 0}
+                            >
+                              Pay
                             </button>
                             {/*  <button
                                 className="btn btn-sm btn-outline-danger"

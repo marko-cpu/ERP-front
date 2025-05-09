@@ -57,7 +57,6 @@ const OrdersList = () => {
         setTotalPages(response.data?.totalPages || 0);
         setLoading(false);
         console.log("Fetched orders:", response.data?.content);
-        
       },
       (error) => {
         console.error("Error fetching orders", error);
@@ -65,6 +64,7 @@ const OrdersList = () => {
       }
     );
   };
+
 
   const refreshOrders = async () => {
     try {
@@ -80,7 +80,7 @@ const OrdersList = () => {
       console.error("Refresh error:", error);
     } finally {
       setLoading(false);
-    } 
+    }
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -162,6 +162,16 @@ const OrdersList = () => {
                 />
               </div>
             </div>
+           {/*  <div className="input-group w-25">
+              <select
+                className="form-select"
+                onChange={(e) => handleStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="0">Pending</option>
+                <option value="1">Paid</option>
+              </select>
+            </div> */}
             <button
               className="btn btn-light-blue d-flex align-items-center gap-2"
               onClick={() => setShowCreateModal(true)}
@@ -185,7 +195,7 @@ const OrdersList = () => {
                     <tr className="text-center">
                       <th className="ps-4 py-3 text-uppercase small">
                         Order ID
-                      </th> 
+                      </th>
                       <th className="py-3 text-uppercase small">Customer</th>
                       <th className="py-3 text-uppercase small">Total</th>
                       <th className="py-3 text-uppercase small">Items</th>

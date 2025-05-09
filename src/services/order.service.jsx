@@ -45,7 +45,16 @@ const deleteOrder = (orderId) => {
   return axios.delete(`${API_URL}${orderId}`, {
     headers: authHeader(),
   });
-}
+};
+
+const payInvoice = (accountingId, amount) => {
+  return axios.post(
+    API_URL + "pay",
+    { accounting_id: accountingId, totalPrice: amount },
+    { headers: authHeader() }
+  );
+};
+
 
 const OrderService = {
   getAllOrders,
@@ -56,6 +65,7 @@ const OrderService = {
   getCustomers,
   checkCustomerExists,
   deleteOrder,
+  payInvoice,
 };
 
 export default OrderService;

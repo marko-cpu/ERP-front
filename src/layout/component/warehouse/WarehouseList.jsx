@@ -13,6 +13,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 
+
 const WarehouseList = () => {
   const navigate = useNavigate();
   const [warehouses, setWarehouses] = useState([]);
@@ -42,6 +43,7 @@ const WarehouseList = () => {
       }
     );
   };
+
 
   const handleDelete = async () => {
     try {
@@ -228,6 +230,8 @@ const WarehouseList = () => {
           </>
         )}
       </div>
+ 
+
     </UserLayout>
   );
 };

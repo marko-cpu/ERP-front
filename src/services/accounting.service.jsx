@@ -3,9 +3,19 @@ import authHeader from "./auth-header";
 
 const API_URL = "http://localhost:8080/api/accountings";
 
-const getAllAccountings = (page = 0, size = 10) => {
+/* const getAllAccountings = (page = 0, size = 10) => {
   return axios.get(API_URL + `?page=${page}&size=${size}`, {
     headers: authHeader(),
+  });
+}; */
+const getAllAccountings = (params) => {
+  return axios.get(API_URL, {
+    params: {
+      page: params.page,
+      size: params.size,
+      status: params.status
+    },
+    headers: authHeader()
   });
 };
 
@@ -26,6 +36,7 @@ const updateAccounting = (id, accountingData) => {
     headers: authHeader(),
   });
 };
+
 
 const AccountingService = {
   getAllAccountings,
